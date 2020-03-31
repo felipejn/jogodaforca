@@ -1,18 +1,19 @@
 class JogoForca:
 
     listaTotal = [] # Lista com todas as palavras
-    lista = []
+    lista = [] # Lista restrita ao n• de caracteres
     contaLetras = {} # Dicionário com contagem de palavras por letra
     palavra = {} # Dicionário com posição das letras encontradas na palavra
     erradas = [] # Lista com tentativas
     erros = 0
     acertos = 0
+    acerto = False # Condição para iniciar o método tentativas()
 
     def novoJogo(n):
         JogoForca.abreLista()
         JogoForca.buscaPalavras(n)
         JogoForca.primeiroAcerto(n)
-        JogoForca.tentativas(n)
+        if JogoForca.acerto: JogoForca.tentativas(n)
 
     def abreLista(): # Copia palavras do arquivo para lista
         listaPalavras = open('palavras.txt', 'r')
@@ -61,6 +62,7 @@ class JogoForca:
                     n = JogoForca.contaLetras[item]
                     tentativa = item
             pergunta = input("A palavra possui a letra " + tentativa + "?: ")
+
             if pergunta == "s":
                 while acerto == False:
                     JogoForca.tela(carac)
@@ -71,15 +73,32 @@ class JogoForca:
                         JogoForca.palavra[posicao] = tentativa
                         JogoForca.acertos += 1
                     acerto = True
+                JogoForca.erradas.append(tentativa)
+                del JogoForca.contaLetras[tentativa]
+                JogoForca.acerto = True
 
-            else: JogoForca.erros += 1
-            JogoForca.erradas.append(tentativa)
-            del JogoForca.contaLetras[tentativa]
+            elif pergunta == "n":
+                JogoForca.erros += 1
+                JogoForca.erradas.append(tentativa)
+                del JogoForca.contaLetras[tentativa]
+                if JogoForca.erros == 6: # Condição para perder e encerrar loop
+                    acerto = True
+                    JogoForca.perdi(carac)
+                if len(JogoForca.lista) == 0:
+                    acerto = True
+                    JogoForca.perdi(carac)
+
+            else: n = input("Resposta Inválida! Tecle <enter> para continuar.")
+
 
     def tentativas(carac): # Demais tentativas
-        gameover = False
-        while gameover == False:
 
+        if len(JogoForca.lista) == 0:
+            gameover = True
+            JogoForca.perdi(carac)
+        else: gameover = False
+
+        while gameover == False:
             lista = [] # Lista com palavras encontradas
             letras = {} # Dicionário com posição de letras encontradas
             contaLetras = {} # Dicionário com contagem de palavras por letra
@@ -114,38 +133,47 @@ class JogoForca:
                 if elimina == False and soma > 0:
                     contaLetras[letra] = soma
 
-            acerto = False
-            while acerto == False: # Tentativa
-                JogoForca.tela(carac)
-                n = 0
-                for item in contaLetras:
-                    if contaLetras[item] > n:
-                        n = contaLetras[item]
-                        tentativa = item
-                pergunta = input("A palavra possui a letra " + tentativa + "?: ")
-                if pergunta == "s":
-                    while acerto == False:
-                        JogoForca.tela(carac)
-                        quantas = int(input("Quantas vezes a letra \"" + tentativa + "\" aparece na palavra? "))
-                        print("Digite a posição da letra começando pelo início da palavra")
-                        for i in range(quantas):
-                            posicao = int(input("Posição da ocorrência: "))
-                            JogoForca.palavra[posicao] = tentativa
-                            JogoForca.acertos += 1
-                        acerto = True
+                if len(lista) == 0:
+                    break
+                    perdi(carac)
 
-                else: JogoForca.erros += 1
+            # Tentativa
+
+            JogoForca.tela(carac)
+            n = 0
+            for item in contaLetras:
+                if contaLetras[item] > n:
+                    n = contaLetras[item]
+                    tentativa = item
+            pergunta = input("A palavra possui a letra " + tentativa + "?: ")
+
+            if pergunta == "s":
+                acerto = False
+                while acerto == False:
+                    JogoForca.tela(carac)
+                    quantas = int(input("Quantas vezes a letra \"" + tentativa + "\" aparece na palavra? "))
+                    print("Digite a posição da letra começando pelo início da palavra")
+                    for i in range(quantas):
+                        posicao = int(input("Posição da ocorrência: "))
+                        JogoForca.palavra[posicao] = tentativa
+                        JogoForca.acertos += 1
+                    acerto = True
                 JogoForca.erradas.append(tentativa)
-                del contaLetras[tentativa]
+                del JogoForca.contaLetras[tentativa]
+                if JogoForca.acertos == carac: # Condição para vencer e encerrar loop
+                    gameover = True
+                    JogoForca.ganhei(carac)
 
+            elif pergunta == "n":
+                JogoForca.erros += 1
+                JogoForca.erradas.append(tentativa)
+                del JogoForca.contaLetras[tentativa]
+                if JogoForca.erros == 6: # Condição para perder e encerrar loop
+                    acerto = True
+                    gameover = True
+                    JogoForca.perdi(carac)
 
-            if JogoForca.acertos == carac:
-                gameover = True
-                JogoForca.ganhei(carac)
-            if JogoForca.erros == 6:
-                gameover = True
-                JogoForca.perdi(carac)
-
+            else: n = input("Resposta Inválida! Tecle para continuar.")
 
     def ganhei(n):
         JogoForca.tela(n)
@@ -154,6 +182,7 @@ class JogoForca:
     def perdi(n):
         JogoForca.tela(n)
         print("PERDI")
+        print
 
 # Palavra = bala
 import os
